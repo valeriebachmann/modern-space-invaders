@@ -113,7 +113,7 @@ function deleteElement(array, item, element) {
   array.splice(index, 1);
   container.removeChild(element);
 }
-
+//comment
 function isColliding(rect1, rect2) {
   return !(
     rect2.left > rect1.right ||
