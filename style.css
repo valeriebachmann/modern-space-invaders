@@ -1,0 +1,196 @@
+html {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  color: rgb(100, 160, 60);
+  background-color: rgb(28, 28, 28);
+  font-family: 'Poppins', sans-serif;
+}
+
+.wrap {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  width: 100%;
+}
+
+.main {
+  width: 100%;
+  height: 100%;
+  background: #89d2a3;
+  background-image: linear-gradient(#010216, #03074b);
+  position: relative;
+}
+
+.killCount {
+  position: absolute;
+  top: 0px;
+  left: 50%;
+  color: white;
+  font-size: 2rem;
+  font-weight: bold;
+  transform: translateX(-50%)
+}
+
+.highScoreElement {
+  position: absolute;
+  top: 0px;
+  left: 20px;
+  color: white;
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+@keyframes scroll-background {
+  from {
+    background-position-y: 0px;
+  }
+
+  to {
+    background-position-y: 200px;
+  }
+}
+
+header {
+  text-align: center;
+  color: #fff;
+  padding: 5px;
+}
+
+footer {
+  padding: 10px;
+  text-align: center;
+  font-size: 11px;
+  color: #fff;
+}
+
+
+.main .laser {
+  position: absolute;
+  margin-left: -2.5px;
+  height: 25px;
+  z-index: 1;
+}
+
+.main .specialItem {
+  position: absolute;
+  z-index: 1;
+}
+
+.main .enemyLaser {
+  position: absolute;
+  margin-left: -2.5px;
+  height: 20px;
+  z-index: 1;
+}
+
+.main .player {
+  z-index: 2;
+  position: absolute;
+}
+
+.main .player>img {
+  transition: transform 0.3s ease;
+}
+
+.main .enemy {
+  position: absolute;
+  transition: width 0.3s ease-in-out;
+  z-index: 2;
+}
+
+.win,
+.lose {
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  background: #656565;
+  color: #fff;
+  padding: 20px 50px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0);
+  border-radius: 10px;
+  text-align: center;
+  transition: opacity 0.3s ease-in-out;
+  z-index: 2;
+}
+
+.btn {
+  position: relative;
+  padding: 19px 36px;
+  display: block;
+  text-decoration: none;
+  text-transform: uppercase;
+  overflow: hidden;
+  border-radius: 40px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn span {
+  position: relative;
+  color: #fff;
+  font-family: Arial;
+  letter-spacing: 8px;
+  z-index: 1;
+}
+
+.btn .liquid {
+  position: absolute;
+  top: -80px;
+  left: 0;
+  width: 100%;
+  height: 200px;
+  background: #eb99b3;
+  box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5);
+  transition: 0.5s;
+}
+
+.btn .liquid::after,
+.btn .liquid::before {
+  content: '';
+  width: 200%;
+  height: 200%;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -75%);
+  background: #fff;
+}
+
+.btn .liquid::before {
+  border-radius: 45%;
+  background: rgba(20, 20, 20, 1);
+  animation: animate 5s linear infinite;
+}
+
+.btn .liquid::after {
+  border-radius: 40%;
+  background: rgba(20, 20, 20, 0.5);
+  animation: animate 10s linear infinite;
+}
+
+.btn:hover .liquid {
+  top: -120px;
+}
+
+@keyframes animate {
+  0% {
+    transform: translate(-50%, -75%) rotate(0deg);
+  }
+
+  100% {
+    transform: translate(-50%, -75%) rotate(360deg);
+  }
+}
+
+.isMovingRight>img {
+  transform: perspective(400px) rotateY(40deg);
+}
+
+.isMovingLeft>img {
+  transform: perspective(400px) rotateY(-40deg);
+}
