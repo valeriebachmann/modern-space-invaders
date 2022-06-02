@@ -94,7 +94,7 @@ footer {
 }
 
 .main .player>img {
-  transition: transform 0.3s ease;
+  transition: transform 0.5s ease;
 }
 
 .main .enemy {
@@ -193,4 +193,14 @@ footer {
 
 .isMovingLeft>img {
   transform: perspective(400px) rotateY(-40deg);
+}
+
+.liveCount {}
+
+.liveContainer {
+  position: absolute;
+  top: 30px;
+  right: 10px;
+  display: flex;
+  gap: 10px
 }

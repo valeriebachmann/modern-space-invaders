@@ -6,8 +6,8 @@ const GAME_WIDTH = window.innerWidth;
 const GAME_HEIGHT = window.innerHeight;
 
 const playerWidth = GAME_WIDTH / (GAME_WIDTH > 1000 ? 20 : 10);
-const playerHeight = playerWidth * 1.1;
-const enemyWidth = playerWidth;
+const playerHeight = playerWidth * 1.185;
+const enemyWidth = playerWidth * 0.7;
 const enemyHeight = enemyWidth;
 
 let createEnemyIntervalId;
@@ -25,15 +25,18 @@ const STATE = {
     isShooting: false,
     isMovingLeft: false,
     isMovingRight: false,
-    kills: 0
+    kills: 0,
+    lifeScore: 3,
+    heartSize: 35
   },
   enemies: [],
   enemyLasers: [],
+  canEnemyShoot: true,
   enemyWidth,
   enemyHeight,
   maxEnemyRows: 6,
   numberOfEnemiesPerRow: 8,
-  specialItemSize: 50,
+  specialItemSize: 20,
   specialItems: [],
   gameOver: false,
 };
@@ -54,6 +57,19 @@ highScoreElement.className = "highScoreElement";
 highScoreElement.innerText = "Highscore: " + (window.localStorage.getItem('highscore') || 0);
 container.appendChild(killCount);
 container.appendChild(highScoreElement);
+
+const liveContainer = document.createElement('div');
+liveContainer.className = "liveContainer";
+document.body.appendChild(liveContainer)
+
+for (let i = 0; i < 3; i++) {
+  const liveCount = document.createElement('img');
+  liveCount.src = 'img/heart.png';
+  liveCount.width = STATE.player.heartSize;
+  liveCount.height = STATE.player.heartSize;
+  liveCount.className = "liveCount";
+  liveContainer.appendChild(liveCount);
+}
 
 // begin gameloop
 gameLoop();
@@ -127,7 +143,7 @@ function createPlayer() {
   const playerElement = document.createElement('div');
   playerElement.className = "player";
   const playerImgElement = document.createElement('img');
-  playerImgElement.src = 'img/starship.png';
+  playerImgElement.src = 'img/starship_small.png';
   playerImgElement.width = STATE.player.width;
   playerElement.appendChild(playerImgElement);
   container.appendChild(playerElement);
@@ -137,7 +153,7 @@ function createPlayer() {
 
 function createEnemy(x, y) {
   const enemyElement = document.createElement('img');
-  enemyElement.src = 'img/alien.png';
+  enemyElement.src = 'img/alien_small.png';
   enemyElement.className = 'enemy';
   enemyElement.width = STATE.enemyWidth;
   container.appendChild(enemyElement);
@@ -164,7 +180,7 @@ function createEnemyInterval(time = 3000) {
     if (canCreateNewRow) {
       createEnemyRow();
       for (let i = 0; i < enemies.length - numberOfEnemiesPerRow; i++) {
-        enemies[i].y += 70;
+        enemies[i].y += enemyHeight * 1.2;
       }
     }
   }, time);
@@ -182,7 +198,7 @@ function updatePlayer() {
     STATE.player.x += STATE.player.speed;
   }
   if (STATE.player.isShooting && STATE.player.cooldown === 0) {
-    createLaser(STATE.player.x - STATE.player.width / 2, STATE.player.y);
+    createLaser(STATE.player.x + STATE.player.width / 2 - 10, STATE.player.y);
     STATE.player.cooldown = 6;
   }
   setPosition(STATE.player.element, bound(STATE.player.x), STATE.player.y);
@@ -195,9 +211,6 @@ function updatePlayerLaser() {
   const enemies = STATE.enemies;
   const lasers = STATE.player.lasers;
 
-  // das wird durch for of loop ersetzt
-  //   for (let i = 0; i < lasers.length; i++) {
-  //     const laser = lasers[i];
   for (const laser of lasers) {
     laser.y -= GAME_HEIGHT / 80;
     if (laser.y < 0) {
@@ -226,7 +239,7 @@ function updatePlayerLaser() {
 }
 
 function updateEnemies() {
-  const dx = Math.sin(Date.now() / 1000) * 40;
+  const dx = Math.sin(Date.now() / 1000) * 40 + 50;
   const dy = Math.cos(Date.now() / 1000) * 30;
   for (const enemy of STATE.enemies) {
     const newX = enemy.x + dx;
@@ -236,7 +249,7 @@ function updateEnemies() {
     }
     setPosition(enemy.element, newX, newY);
     if (enemy.enemyCooldown === 0 && enemy.element) {
-      createLaser(newX, newY + STATE.enemyHeight, true);
+      STATE.canEnemyShoot && createLaser(newX, newY + STATE.enemyHeight, true);
       enemy.enemyCooldown = Math.floor(Math.random() / 2);
     }
     enemy.enemyCooldown -= 0.5;
@@ -269,13 +282,19 @@ function updateItems() {
     const specialItemRect = item.element.getBoundingClientRect();
     const playerRect = STATE.player.element.getBoundingClientRect();
     if (isColliding(playerRect, specialItemRect)) {
+      // Laser reset
+      container.querySelectorAll('.enemyLaser').forEach(element => container.removeChild(element))
+      STATE.enemyLasers = [];
+      STATE.canEnemyShoot = false;
+
       item.element.width = 0;
       const indexOfItem = items.indexOf(item);
       items.splice(indexOfItem, 1);
       container.style.backgroundImage = 'linear-gradient(#150116, #6f0464)';
       updateEnemyIntervalSpeed(7000);
-      setInterval(function () {
+      setTimeout(function () {
         container.style.backgroundImage = 'linear-gradient(#010216, #03074b)';
+        STATE.canEnemyShoot = true;
       }, 7000);
     }
   }
@@ -283,7 +302,7 @@ function updateItems() {
 
 function createLaser(x, y, enemy = false) {
   const element = document.createElement('img');
-  element.src = enemy ? 'img/enemy_laser.png' : 'img/starship_laser.png';
+  element.src = enemy ? 'img/enemy_laser_small.png' : 'img/starship_laser_small.png';
   element.className = enemy ? 'enemyLaser' : 'laser';
   container.appendChild(element);
   const laser = { x, y, element };
@@ -310,6 +329,8 @@ function updateEnemyLaser() {
       if (prevHighScore < STATE.player.kills) {
         window.localStorage.setItem('highscore', STATE.player.kills)
       }
+      STATE.player.lifeScore -= 1;
+      console.log(STATE.player.lifeScore);
       //STATE.gameOver = true;
     }
     setPosition(
@@ -318,6 +339,10 @@ function updateEnemyLaser() {
       enemyLaser.y + 15
     );
   }
+
+  function createPlayerLives() {
+  }
+  createPlayerLives();
 }
 
 // event listener functions
