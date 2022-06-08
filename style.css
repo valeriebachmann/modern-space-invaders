@@ -71,7 +71,6 @@ footer {
 
 .main .laser {
   position: absolute;
-  margin-left: -2.5px;
   height: 25px;
   z-index: 1;
 }
@@ -83,7 +82,6 @@ footer {
 
 .main .enemyLaser {
   position: absolute;
-  margin-left: -2.5px;
   height: 20px;
   z-index: 1;
 }
@@ -103,7 +101,6 @@ footer {
   z-index: 2;
 }
 
-.win,
 .lose {
   opacity: 0;
   pointer-events: none;
@@ -195,9 +192,9 @@ footer {
   transform: perspective(400px) rotateY(-40deg);
 }
 
-.liveCount {}
+.lifeCount {}
 
-.liveContainer {
+.lifeContainer {
   position: absolute;
   top: 30px;
   right: 10px;

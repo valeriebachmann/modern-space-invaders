@@ -9,6 +9,7 @@ const playerWidth = GAME_WIDTH / (GAME_WIDTH > 1000 ? 20 : 10);
 const playerHeight = playerWidth * 1.185;
 const enemyWidth = playerWidth * 0.7;
 const enemyHeight = enemyWidth;
+const defaultEnemyCooldown = 300
 
 let createEnemyIntervalId;
 
@@ -52,34 +53,51 @@ createEnemies();
 
 const killCount = document.createElement('p');
 killCount.className = "killCount";
+container.appendChild(killCount);
+
+const prevHighScore = window.localStorage.getItem('highscore');
 const highScoreElement = document.createElement('p');
 highScoreElement.className = "highScoreElement";
-highScoreElement.innerText = "Highscore: " + (window.localStorage.getItem('highscore') || 0);
-container.appendChild(killCount);
+highScoreElement.innerText = "Highscore: " + (prevHighScore || 0);
 container.appendChild(highScoreElement);
 
-const liveContainer = document.createElement('div');
-liveContainer.className = "liveContainer";
-document.body.appendChild(liveContainer)
+const lifeContainer = document.createElement('div');
+lifeContainer.className = "lifeContainer";
+document.body.appendChild(lifeContainer);
 
 for (let i = 0; i < 3; i++) {
-  const liveCount = document.createElement('img');
-  liveCount.src = 'img/heart.png';
-  liveCount.width = STATE.player.heartSize;
-  liveCount.height = STATE.player.heartSize;
-  liveCount.className = "liveCount";
-  liveContainer.appendChild(liveCount);
+  const lifeCount = document.createElement('img');
+  lifeCount.src = 'img/heart.png';
+  lifeCount.width = STATE.player.heartSize;
+  lifeCount.height = STATE.player.heartSize;
+  lifeCount.className = "lifeCount";
+  lifeContainer.appendChild(lifeCount);
 }
 
 // begin gameloop
 gameLoop();
-function gameLoop() {
+function gameLoop(timestamp) {
   killCount.innerText = STATE.player.kills;
+  if (prevHighScore < STATE.player.kills) {
+    highScoreElement.innerText = "Highscore: " + STATE.player.kills;
+  }
 
   // randomly spawn special items
-  if (Math.random() < 0.001) {
-    createSpecialItem();
+  if (Math.random() < 0.007) { // wahrscheinlicher -> grössere Zahl
+    if (Math.random() < 0.001) { // weniger wahrscheinlich -> kleinere Zahl
+      createSpecialItem(type = 'rare');
+    } else {
+      createSpecialItem();
+    }
   }
+
+  // if (Math.floor(timestamp) % (10 * 1000) <= 20) {
+  //   if (Math.floor(timestamp) % (20 * 1000) <= 20) {
+  //     createSpecialItem(type = 'rare');
+  //   } else {
+  //     createSpecialItem()
+  //   }
+  // }
 
   // update all parts of game
   updatePlayer();
@@ -90,17 +108,20 @@ function gameLoop() {
 
   // check if game is over
   if (STATE.gameOver) {
+    if (prevHighScore < STATE.player.kills) {
+      window.localStorage.setItem('highscore', STATE.player.kills);
+    }
+
     const lose = document.querySelector('.lose');
     lose.style.opacity = '100%';
     lose.style.pointerEvents = 'initial';
     window.cancelAnimationFrame(gameLoop);
     clearInterval(createEnemyIntervalId);
-  } else if (STATE.enemies.length === 0) {
-    const win = document.querySelector('.win');
-    win.style.opacity = '100%';
-    win.style.pointerEvents = 'initial';
-    window.cancelAnimationFrame(gameLoop);
-    clearInterval(createEnemyIntervalId);
+
+    //Audio
+    const sound = new Audio('audio/losingSound.wav');
+    sound.play();
+
   } else {
     window.requestAnimationFrame(gameLoop);
   }
@@ -157,7 +178,7 @@ function createEnemy(x, y) {
   enemyElement.className = 'enemy';
   enemyElement.width = STATE.enemyWidth;
   container.appendChild(enemyElement);
-  const enemyCooldown = Math.floor(Math.random() * 100);
+  const enemyCooldown = Math.floor(Math.random() * defaultEnemyCooldown);
   const enemy = { x, y, element: enemyElement, enemyCooldown };
   STATE.enemies.push(enemy);
   setPosition(enemyElement, x, y);
@@ -185,7 +206,7 @@ function createEnemyInterval(time = 3000) {
     }
   }, time);
 }
-function updateEnemyIntervalSpeed(time) {
+function updateEnemyIntervalSpeed(time = 3000) {
   clearInterval(createEnemyIntervalId);
   createEnemyInterval(time);
 }
@@ -198,7 +219,7 @@ function updatePlayer() {
     STATE.player.x += STATE.player.speed;
   }
   if (STATE.player.isShooting && STATE.player.cooldown === 0) {
-    createLaser(STATE.player.x + STATE.player.width / 2 - 10, STATE.player.y);
+    createLaser(STATE.player.x + STATE.player.width / 2 - 4.625, STATE.player.y);
     STATE.player.cooldown = 6;
   }
   setPosition(STATE.player.element, bound(STATE.player.x), STATE.player.y);
@@ -216,7 +237,7 @@ function updatePlayerLaser() {
     if (laser.y < 0) {
       deleteElement(lasers, laser, laser.element);
     }
-    setPosition(laser.element, laser.x, laser.y);
+    setPosition(laser.element, laser.x, laser.y)
 
     const laserRect = laser.element.getBoundingClientRect();
     for (const enemy of enemies) {
@@ -248,29 +269,30 @@ function updateEnemies() {
       STATE.gameOver = true;
     }
     setPosition(enemy.element, newX, newY);
-    if (enemy.enemyCooldown === 0 && enemy.element) {
-      STATE.canEnemyShoot && createLaser(newX, newY + STATE.enemyHeight, true);
-      enemy.enemyCooldown = Math.floor(Math.random() / 2);
+    if (enemy.enemyCooldown <= 0 && enemy.element) {
+      if (STATE.canEnemyShoot) {
+        createLaser(newX, newY + STATE.enemyHeight, true);
+      }
+      enemy.enemyCooldown = Math.floor(Math.random() * defaultEnemyCooldown);
     }
     enemy.enemyCooldown -= 0.5;
   }
 }
 
-function createSpecialItem() {
+function createSpecialItem(type = 'regular') {
   const x = Math.random() * GAME_WIDTH;
   const y = 0;
   const specialItemElement = document.createElement('img');
-  specialItemElement.src = 'img/flower.png';
+  specialItemElement.src = type === 'regular' ? 'img/flower.png' : 'img/diamond.png';
   specialItemElement.width = STATE.specialItemSize;
   specialItemElement.height = STATE.specialItemSize;
   specialItemElement.className = 'specialItem';
   container.appendChild(specialItemElement);
-  STATE.specialItems.push({ element: specialItemElement, x, y });
+  STATE.specialItems.push({ element: specialItemElement, x, y, type });
   setPosition(specialItemElement, x, y);
 }
 
 function updateItems() {
-  // const { specialItems: items } = STATE;
   const items = STATE.specialItems;
   for (const item of items) {
     item.y += 3;
@@ -286,19 +308,47 @@ function updateItems() {
       container.querySelectorAll('.enemyLaser').forEach(element => container.removeChild(element))
       STATE.enemyLasers = [];
       STATE.canEnemyShoot = false;
-
-      item.element.width = 0;
-      const indexOfItem = items.indexOf(item);
-      items.splice(indexOfItem, 1);
-      container.style.backgroundImage = 'linear-gradient(#150116, #6f0464)';
-      updateEnemyIntervalSpeed(7000);
-      setTimeout(function () {
-        container.style.backgroundImage = 'linear-gradient(#010216, #03074b)';
-        STATE.canEnemyShoot = true;
-      }, 7000);
+      deleteElement(items, item, item.element)
+      if (item.type === 'regular') {
+        container.style.backgroundImage = 'linear-gradient(#355070, #6D597A)';
+        updateEnemyIntervalSpeed(7000);
+        setTimeout(function () {
+          container.style.backgroundImage = 'linear-gradient(#010216, #03074b)';
+          STATE.canEnemyShoot = true;
+          updateEnemyIntervalSpeed();
+        }, 7000);
+      } else {
+        container.style.backgroundImage = 'linear-gradient(#ff0000, #00ff00)';
+        updateEnemyIntervalSpeed(4000);
+        setTimeout(function () {
+          container.style.backgroundImage = 'linear-gradient(#010216, #03074b)';
+          STATE.canEnemyShoot = true;
+          updateEnemyIntervalSpeed();
+        }, 4000);
+        STATE.player.kills += STATE.enemies.length;
+        animateRemoveAllEnemies();
+      }
     }
   }
 }
+
+function sleep(timeout) {
+  return new Promise((resolve) => setTimeout(() => {
+    resolve()
+  }, timeout))
+}
+
+async function animateRemoveAllEnemies() {
+  const savedEnemies = STATE.enemies;
+  STATE.enemies = [];
+  for (const enemy of savedEnemies) {
+    enemy.element.width = 0;
+    await sleep(50);
+  }
+}
+
+//Audio
+const laserSound = new Audio('audio/laserSound.mp3');
 
 function createLaser(x, y, enemy = false) {
   const element = document.createElement('img');
@@ -310,10 +360,13 @@ function createLaser(x, y, enemy = false) {
     STATE.enemyLasers.push(laser);
   } else {
     STATE.player.lasers.push(laser);
+    laserSound.currentTime = 0;
+    laserSound.play();
   }
   setPosition(element, x, y);
 }
 
+let prevEnemyLaser;
 function updateEnemyLaser() {
   // const { enemyLasers } = STATE;
   const enemyLasers = STATE.enemyLasers;
@@ -325,24 +378,23 @@ function updateEnemyLaser() {
     const enemyLaserRect = enemyLaser.element.getBoundingClientRect();
     const playerRect = STATE.player.element.getBoundingClientRect();
     if (isColliding(playerRect, enemyLaserRect)) {
-      const prevHighScore = window.localStorage.getItem('highscore');
-      if (prevHighScore < STATE.player.kills) {
-        window.localStorage.setItem('highscore', STATE.player.kills)
+      deleteElement(enemyLasers, enemyLaser, enemyLaser.element);
+      if (enemyLaser != prevEnemyLaser) {
+        STATE.player.lifeScore -= 1;
+        lifeContainer.removeChild(lifeContainer.firstElementChild);
       }
-      STATE.player.lifeScore -= 1;
-      console.log(STATE.player.lifeScore);
-      //STATE.gameOver = true;
+      if (STATE.player.lifeScore === 0) {
+        STATE.gameOver = true;
+      }
+      prevEnemyLaser = enemyLaser;
     }
+
     setPosition(
       enemyLaser.element,
       enemyLaser.x + STATE.enemyWidth / 2,
       enemyLaser.y + 15
     );
   }
-
-  function createPlayerLives() {
-  }
-  createPlayerLives();
 }
 
 // event listener functions
@@ -373,18 +425,13 @@ function keyRelease(event) {
 }
 
 // Audio Button
-const beep = new Audio('audio/beep.wav');
+const beep = new Audio('audio/replaySound.wav');
 const play = () => beep.play();
 const stop = () => {
   beep.pause();
   beep.currentTime = 0;
 };
-const restartButtons = [
-  document.getElementById('restartWin'),
-  document.getElementById('restartLose'),
-];
-for (const button of restartButtons) {
-  button.onmouseenter = play;
-  button.onmouseleave = stop;
-  button.onclick = () => window.location.reload();
-}
+const restartButton = document.getElementById('restart')
+restartButton.onmouseenter = play;
+restartButton.onmouseleave = stop;
+restartButton.onclick = () => window.location.reload();
