@@ -37,7 +37,7 @@ const STATE = {
   enemyHeight,
   maxEnemyRows: 6,
   numberOfEnemiesPerRow: 8,
-  specialItemSize: 20,
+  specialItemSize: 40,
   specialItems: [],
   gameOver: false,
 };
@@ -74,21 +74,37 @@ for (let i = 0; i < 3; i++) {
   lifeContainer.appendChild(lifeCount);
 }
 
-// begin gameloop
-gameLoop();
+const playButton = document.getElementById('play');
+playButton.onclick = play;
+const backgroundSound = new Audio('audio/backgroundSound.mp3');
+
+function play() {
+  playButton.blur();
+  const playWrapperElement = document.querySelector('.play');
+  playWrapperElement.style.opacity = 0;
+  playWrapperElement.style.pointerEvents = 'none';
+
+  backgroundSound.volume = 0.5;
+  backgroundSound.play();
+  backgroundSound.onended = function () {
+    backgroundSound.currentTime = 0;
+    backgroundSound.play();
+  }
+  // begin gameloop
+  gameLoop();
+}
+
 function gameLoop(timestamp) {
   killCount.innerText = STATE.player.kills;
   if (prevHighScore < STATE.player.kills) {
     highScoreElement.innerText = "Highscore: " + STATE.player.kills;
   }
 
-  // randomly spawn special items
-  if (Math.random() < 0.007) { // wahrscheinlicher -> grössere Zahl
-    if (Math.random() < 0.001) { // weniger wahrscheinlich -> kleinere Zahl
-      createSpecialItem(type = 'rare');
-    } else {
-      createSpecialItem();
-    }
+  if (Math.random() < 0.001) {
+    createSpecialItem();
+  }
+  if (Math.random() < 0.0005) {
+    createSpecialItem(type = 'rare');
   }
 
   // if (Math.floor(timestamp) % (10 * 1000) <= 20) {
@@ -112,15 +128,23 @@ function gameLoop(timestamp) {
       window.localStorage.setItem('highscore', STATE.player.kills);
     }
 
+    const scoreTextElement = document.querySelector('.lose h1');
+    scoreTextElement.innerText = "Score: " + STATE.player.kills;
+
     const lose = document.querySelector('.lose');
     lose.style.opacity = '100%';
     lose.style.pointerEvents = 'initial';
+
+
     window.cancelAnimationFrame(gameLoop);
     clearInterval(createEnemyIntervalId);
 
     //Audio
+    backgroundSound.pause()
+
     const sound = new Audio('audio/losingSound.wav');
     sound.play();
+
 
   } else {
     window.requestAnimationFrame(gameLoop);
@@ -283,7 +307,7 @@ function createSpecialItem(type = 'regular') {
   const x = Math.random() * GAME_WIDTH;
   const y = 0;
   const specialItemElement = document.createElement('img');
-  specialItemElement.src = type === 'regular' ? 'img/flower.png' : 'img/diamond.png';
+  specialItemElement.src = type === 'regular' ? 'img/specialItem.png' : 'img/rareItem.png';
   specialItemElement.width = STATE.specialItemSize;
   specialItemElement.height = STATE.specialItemSize;
   specialItemElement.className = 'specialItem';
@@ -291,6 +315,9 @@ function createSpecialItem(type = 'regular') {
   STATE.specialItems.push({ element: specialItemElement, x, y, type });
   setPosition(specialItemElement, x, y);
 }
+
+const specialItemSound = new Audio('audio/specialItem.wav');
+const rareItemSound = new Audio('audio/rareItem.wav');
 
 function updateItems() {
   const items = STATE.specialItems;
@@ -310,7 +337,8 @@ function updateItems() {
       STATE.canEnemyShoot = false;
       deleteElement(items, item, item.element)
       if (item.type === 'regular') {
-        container.style.backgroundImage = 'linear-gradient(#355070, #6D597A)';
+        specialItemSound.play();
+        container.style.backgroundImage = 'linear-gradient(#010216, #26c5f3)';
         updateEnemyIntervalSpeed(7000);
         setTimeout(function () {
           container.style.backgroundImage = 'linear-gradient(#010216, #03074b)';
@@ -318,13 +346,14 @@ function updateItems() {
           updateEnemyIntervalSpeed();
         }, 7000);
       } else {
-        container.style.backgroundImage = 'linear-gradient(#ff0000, #00ff00)';
-        updateEnemyIntervalSpeed(4000);
+        rareItemSound.play();
+        container.style.backgroundImage = 'linear-gradient(#9f85ff, #d4abef)';
+        updateEnemyIntervalSpeed(3000);
         setTimeout(function () {
           container.style.backgroundImage = 'linear-gradient(#010216, #03074b)';
           STATE.canEnemyShoot = true;
           updateEnemyIntervalSpeed();
-        }, 4000);
+        }, 3000);
         STATE.player.kills += STATE.enemies.length;
         animateRemoveAllEnemies();
       }
@@ -349,6 +378,7 @@ async function animateRemoveAllEnemies() {
 
 //Audio
 const laserSound = new Audio('audio/laserSound.mp3');
+laserSound.volume = 0.1;
 
 function createLaser(x, y, enemy = false) {
   const element = document.createElement('img');
@@ -366,6 +396,9 @@ function createLaser(x, y, enemy = false) {
   setPosition(element, x, y);
 }
 
+//Audio
+const damageSound = new Audio('audio/roblox.mp3');
+
 let prevEnemyLaser;
 function updateEnemyLaser() {
   // const { enemyLasers } = STATE;
@@ -382,6 +415,8 @@ function updateEnemyLaser() {
       if (enemyLaser != prevEnemyLaser) {
         STATE.player.lifeScore -= 1;
         lifeContainer.removeChild(lifeContainer.firstElementChild);
+        damageSound.currentTime = 0;
+        damageSound.play();
       }
       if (STATE.player.lifeScore === 0) {
         STATE.gameOver = true;
@@ -426,12 +461,11 @@ function keyRelease(event) {
 
 // Audio Button
 const beep = new Audio('audio/replaySound.wav');
-const play = () => beep.play();
 const stop = () => {
   beep.pause();
   beep.currentTime = 0;
 };
 const restartButton = document.getElementById('restart')
-restartButton.onmouseenter = play;
+restartButton.onmouseenter = () => beep.play();
 restartButton.onmouseleave = stop;
 restartButton.onclick = () => window.location.reload();

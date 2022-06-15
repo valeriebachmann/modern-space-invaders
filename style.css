@@ -80,6 +80,7 @@ footer {
   z-index: 1;
 }
 
+
 .main .enemyLaser {
   position: absolute;
   height: 20px;
@@ -101,9 +102,9 @@ footer {
   z-index: 2;
 }
 
-.lose {
-  opacity: 0;
-  pointer-events: none;
+
+.lose,
+.play {
   position: absolute;
   background: #656565;
   color: #fff;
@@ -113,6 +114,15 @@ footer {
   text-align: center;
   transition: opacity 0.3s ease-in-out;
   z-index: 2;
+}
+
+.lose {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.play {
+  opacity: 100%;
 }
 
 .btn {
