@@ -94,26 +94,18 @@ function play() {
   gameLoop();
 }
 
-function gameLoop(timestamp) {
+function gameLoop() {
   killCount.innerText = STATE.player.kills;
   if (prevHighScore < STATE.player.kills) {
     highScoreElement.innerText = "Highscore: " + STATE.player.kills;
   }
 
-  if (Math.random() < 0.001) {
+  if (Math.random() < 0.002) {
     createSpecialItem();
   }
-  if (Math.random() < 0.0005) {
+  if (Math.random() < 0.001) {
     createSpecialItem(type = 'rare');
   }
-
-  // if (Math.floor(timestamp) % (10 * 1000) <= 20) {
-  //   if (Math.floor(timestamp) % (20 * 1000) <= 20) {
-  //     createSpecialItem(type = 'rare');
-  //   } else {
-  //     createSpecialItem()
-  //   }
-  // }
 
   // update all parts of game
   updatePlayer();
@@ -319,6 +311,7 @@ function createSpecialItem(type = 'regular') {
 const specialItemSound = new Audio('audio/specialItem.wav');
 const rareItemSound = new Audio('audio/rareItem.wav');
 
+
 function updateItems() {
   const items = STATE.specialItems;
   for (const item of items) {
@@ -338,19 +331,19 @@ function updateItems() {
       deleteElement(items, item, item.element)
       if (item.type === 'regular') {
         specialItemSound.play();
-        container.style.backgroundImage = 'linear-gradient(#010216, #26c5f3)';
+        container.style.backgroundImage = 'url("img/background_regularItem.jpg")';
         updateEnemyIntervalSpeed(7000);
         setTimeout(function () {
-          container.style.backgroundImage = 'linear-gradient(#010216, #03074b)';
+          container.style.backgroundImage = 'url("img/background.jpg")';
           STATE.canEnemyShoot = true;
           updateEnemyIntervalSpeed();
         }, 7000);
       } else {
         rareItemSound.play();
-        container.style.backgroundImage = 'linear-gradient(#9f85ff, #d4abef)';
+        container.style.backgroundImage = 'url("img/background_rareItem.jpg")';
         updateEnemyIntervalSpeed(3000);
         setTimeout(function () {
-          container.style.backgroundImage = 'linear-gradient(#010216, #03074b)';
+          container.style.backgroundImage = 'url("img/background.jpg")';
           STATE.canEnemyShoot = true;
           updateEnemyIntervalSpeed();
         }, 3000);
@@ -401,7 +394,6 @@ const damageSound = new Audio('audio/roblox.mp3');
 
 let prevEnemyLaser;
 function updateEnemyLaser() {
-  // const { enemyLasers } = STATE;
   const enemyLasers = STATE.enemyLasers;
   for (const enemyLaser of enemyLasers) {
     enemyLaser.y += GAME_HEIGHT / 200;

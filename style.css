@@ -21,9 +21,11 @@ body {
 .main {
   width: 100%;
   height: 100%;
-  background: #89d2a3;
-  background-image: linear-gradient(#010216, #03074b);
+
+  background-image: url("img/background.jpg");
   position: relative;
+  background-position: center;
+  background-size: cover;
 }
 
 .killCount {
@@ -45,16 +47,6 @@ body {
   font-weight: bold;
 }
 
-@keyframes scroll-background {
-  from {
-    background-position-y: 0px;
-  }
-
-  to {
-    background-position-y: 200px;
-  }
-}
-
 header {
   text-align: center;
   color: #fff;
@@ -68,7 +60,6 @@ footer {
   color: #fff;
 }
 
-
 .main .laser {
   position: absolute;
   height: 25px;
@@ -79,7 +70,6 @@ footer {
   position: absolute;
   z-index: 1;
 }
-
 
 .main .enemyLaser {
   position: absolute;
@@ -101,7 +91,6 @@ footer {
   transition: width 0.3s ease-in-out;
   z-index: 2;
 }
-
 
 .lose,
 .play {
@@ -127,8 +116,8 @@ footer {
 
 .btn {
   position: relative;
+  text-align: center;
   padding: 19px 36px;
-  display: block;
   text-decoration: none;
   text-transform: uppercase;
   overflow: hidden;
@@ -201,8 +190,6 @@ footer {
 .isMovingLeft>img {
   transform: perspective(400px) rotateY(-40deg);
 }
-
-.lifeCount {}
 
 .lifeContainer {
   position: absolute;
