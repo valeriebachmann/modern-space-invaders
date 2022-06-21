@@ -9,7 +9,7 @@ const playerWidth = GAME_WIDTH / (GAME_WIDTH > 1000 ? 20 : 10);
 const playerHeight = playerWidth * 1.185;
 const enemyWidth = playerWidth * 0.7;
 const enemyHeight = enemyWidth;
-const defaultEnemyCooldown = 300
+const defaultEnemyCooldown = 300;
 
 let createEnemyIntervalId;
 
@@ -35,7 +35,6 @@ const STATE = {
   canEnemyShoot: true,
   enemyWidth,
   enemyHeight,
-  maxEnemyRows: 6,
   numberOfEnemiesPerRow: 8,
   specialItemSize: 40,
   specialItems: [],
@@ -49,7 +48,7 @@ window.addEventListener('keyup', keyRelease);
 // init game
 const container = document.querySelector('.main');
 createPlayer();
-createEnemies();
+
 
 const killCount = document.createElement('p');
 killCount.className = "killCount";
@@ -90,6 +89,8 @@ function play() {
     backgroundSound.currentTime = 0;
     backgroundSound.play();
   }
+
+  createEnemies();
   // begin gameloop
   gameLoop();
 }
@@ -199,29 +200,29 @@ function createEnemy(x, y) {
   STATE.enemies.push(enemy);
   setPosition(enemyElement, x, y);
 }
+
 function createEnemies() {
   createEnemyRow();
   createEnemyInterval();
 }
+
+function createEnemyInterval(time = 3000) {
+  createEnemyIntervalId = setInterval(function () {
+    const { numberOfEnemiesPerRow, enemies } = STATE;
+    createEnemyRow();
+    for (let i = 0; i < enemies.length - numberOfEnemiesPerRow; i++) {
+      enemies[i].y += enemyHeight * 1.2;
+    }
+  }, time);
+}
+
 function createEnemyRow() {
   const numberOfEnemiesPerRow = STATE.numberOfEnemiesPerRow;
   for (let i = 0; i < numberOfEnemiesPerRow; i++) {
     createEnemy(i * (GAME_WIDTH / numberOfEnemiesPerRow), 100);
   }
 }
-function createEnemyInterval(time = 3000) {
-  createEnemyIntervalId = setInterval(function () {
-    const { numberOfEnemiesPerRow, enemies, maxEnemyRows } = STATE;
-    const amountOfRows = enemies.length / numberOfEnemiesPerRow;
-    const canCreateNewRow = amountOfRows < maxEnemyRows;
-    if (canCreateNewRow) {
-      createEnemyRow();
-      for (let i = 0; i < enemies.length - numberOfEnemiesPerRow; i++) {
-        enemies[i].y += enemyHeight * 1.2;
-      }
-    }
-  }, time);
-}
+
 function updateEnemyIntervalSpeed(time = 3000) {
   clearInterval(createEnemyIntervalId);
   createEnemyInterval(time);
